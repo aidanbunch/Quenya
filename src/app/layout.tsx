@@ -25,9 +25,6 @@ export const metadata: Metadata = {
     title: "Quenya",
     description: "Share images securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
   },
-  icons: {
-    icon: '/favicon.ico',
-  },
   metadataBase: new URL("https://quenya.vercel.app"),
 };
 
