@@ -123,10 +123,7 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
             </p>
             <div className="flex rounded border border-gray-800 bg-gray-900/50 group relative">
               <code className="w-full px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)] text-center">
-                {typeof window !== "undefined"
-                  ? window.location.origin + "/"
-                  : "/"}
-                {uploadedSlug}
+                {window.location.origin}/{uploadedSlug}
               </code>
               <Button
                 onClick={handleCopy}

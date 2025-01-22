@@ -56,16 +56,14 @@ export default function Home() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex rounded border border-gray-800 bg-gray-900/50">
             <span className="inline-flex items-center px-3 border-r border-gray-800 text-gray-400 text-sm font-[family-name:var(--font-geist-mono)]">
-              {typeof window !== "undefined"
-                ? window.location.origin + "/"
-                : "/"}
+              {window.location.origin}/
             </span>
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               className="flex-1 bg-transparent px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)] placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-700"
-              placeholder="your-custom-url"
+              placeholder="your-transmission"
               pattern="[a-zA-Z0-9-_]+"
               title="Only letters, numbers, hyphens, and underscores are allowed"
             />
