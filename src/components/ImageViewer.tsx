@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Download, ZoomIn, ZoomOut, Maximize2, RotateCw, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,9 @@ interface ImageViewerProps {
 export function ImageViewer({ slug, initialData, className }: ImageViewerProps) {
   const [scale, setScale] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,7 +53,76 @@ export function ImageViewer({ slug, initialData, className }: ImageViewerProps) 
   const handleReset = () => {
     setScale(1);
     setRotation(0);
+    setPosition({ x: 0, y: 0 });
   };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    setPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const preventBrowserZoom = (e: WheelEvent) => {
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
+      const isInBounds = 
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+
+      if (isInBounds && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        const delta = e.deltaY * -0.01;
+        setScale(prev => Math.min(Math.max(prev + delta, 0.5), 3));
+      }
+    };
+
+    // Prevent zoom on keyboard shortcuts
+    const preventZoomKeys = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '-' || e.key === '0')) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('wheel', preventBrowserZoom, { passive: false });
+    window.addEventListener('keydown', preventZoomKeys);
+
+    return () => {
+      window.removeEventListener('wheel', preventBrowserZoom);
+      window.removeEventListener('keydown', preventZoomKeys);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, []);
 
   const handleDownload = async () => {
     try {
@@ -121,6 +193,11 @@ export function ImageViewer({ slug, initialData, className }: ImageViewerProps) 
         <div 
           ref={containerRef}
           className="relative bg-gray-900/50 border border-gray-800 rounded overflow-hidden group aspect-[16/9]"
+          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
         >
           {/* Controls */}
           <div className="absolute top-2 right-2 flex items-center gap-1 z-20 p-0.5 rounded bg-gray-900/80 backdrop-blur border border-gray-800">
@@ -179,7 +256,7 @@ export function ImageViewer({ slug, initialData, className }: ImageViewerProps) 
             ref={imageRef}
             className="relative w-full h-full transition-all duration-200 ease-out"
             style={{
-              transform: `scale(${scale}) rotate(${rotation}deg)`,
+              transform: `scale(${scale}) rotate(${rotation}deg) translate(${position.x / scale}px, ${position.y / scale}px)`,
             }}
           >
             <div className="absolute inset-0 flex items-center justify-center">

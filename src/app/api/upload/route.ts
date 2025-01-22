@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       .from("images")
       .upload(fileName, fileBuffer, {
         contentType: file.type,
-        upsert: false,
+        upsert: true,
       });
 
     if (uploadError) {
