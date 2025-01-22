@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     width: "device-width",
     initialScale: 1,
     maximumScale: 5,
+    userScalable: true,
   },
   openGraph: {
     title: "Quenya",
@@ -41,10 +42,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0a] text-white min-h-screen w-full overflow-x-hidden`}
       >
-        <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-4 sm:p-8 pb-11 sm:pb-15 gap-8 sm:gap-16">
-          {children}
+        <div className="flex flex-col min-h-screen w-full max-w-[100vw] items-center justify-between py-4 sm:py-6 px-4 sm:px-8">
+          <div className="h-5" /> {/* Top spacer */}
+          <main className="w-full flex-1 flex items-center justify-center">
+            {children}
+          </main>
+          <div className="h-5" /> {/* Bottom spacer */}
         </div>
       </body>
     </html>
