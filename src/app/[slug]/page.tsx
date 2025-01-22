@@ -36,10 +36,12 @@ async function deleteImage(image: Image) {
   });
 }
 
+type Params = Promise<{ slug: string }>;
+
 export default async function SlugPage({
   params,
 }: {
-  params: { slug: string };
+  params: Params;
 }) {
   const { slug } = await params;
   
@@ -80,7 +82,7 @@ export default async function SlugPage({
       url: image.url,
       mimeType: image.mimeType,
       viewOnce: image.viewOnce,
-      expiresAt: image.expiresAt,
+      expiresAt: image.expiresAt.toISOString(),
     }}
   />;
 } 

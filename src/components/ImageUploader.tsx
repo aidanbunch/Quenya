@@ -85,7 +85,7 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
 
   const handleCopy = async () => {
     if (!uploadedSlug) return;
-    const url = `${window.location.origin}/${uploadedSlug}`;
+    const url = `${process.env.NEXT_PUBLIC_URL ?? ''}/${uploadedSlug}`;
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -123,7 +123,7 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
             </p>
             <div className="flex rounded border border-gray-800 bg-gray-900/50 group relative">
               <code className="w-full px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)] text-center">
-                {window.location.origin}/{uploadedSlug}
+                {process.env.NEXT_PUBLIC_URL ?? ''}/{uploadedSlug}
               </code>
               <Button
                 onClick={handleCopy}

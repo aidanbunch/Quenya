@@ -56,7 +56,7 @@ export default function Home() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex rounded border border-gray-800 bg-gray-900/50">
             <span className="inline-flex items-center px-3 border-r border-gray-800 text-gray-400 text-sm font-[family-name:var(--font-geist-mono)]">
-              {window.location.origin}/
+              {process.env.NEXT_PUBLIC_URL ?? ''}/
             </span>
             <input
               type="text"
