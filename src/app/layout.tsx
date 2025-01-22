@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Quenya",
   description: "Share images securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+  },
   openGraph: {
     title: "Quenya",
     description: "Share images securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
