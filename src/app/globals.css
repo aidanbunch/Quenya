@@ -2,6 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS touch optimization */
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Disable iOS tap highlight and improve touch response */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Optimize inputs */
+input, 
+button, 
+a {
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Disable user select on interactive elements */
+button,
+a,
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
