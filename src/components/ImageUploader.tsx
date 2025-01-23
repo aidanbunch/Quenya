@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -70,6 +70,34 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
       setIsUploading(false);
     }
   }, [slug, viewOnce]);
+
+  const handlePaste = useCallback(async (event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    let imageFile: File | null = null;
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          imageFile = file;
+          break;
+        }
+      }
+    }
+
+    if (imageFile) {
+      onDrop([imageFile]);
+    }
+  }, [onDrop]);
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -193,7 +221,7 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
-                DRAG AND DROP AN IMAGE HERE, OR CLICK TO SELECT
+                DRAG AND DROP AN IMAGE HERE, CLICK TO SELECT, OR PASTE FROM CLIPBOARD
               </p>
               <p className="text-xs text-gray-500 font-[family-name:var(--font-geist-mono)]">
                 SUPPORTED FORMATS: JPG, PNG, GIF, WEBP (MAX 10MB)
