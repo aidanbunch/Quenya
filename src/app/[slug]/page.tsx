@@ -30,39 +30,69 @@ function getExtension(mimeType: string): string {
   return extensions[mimeType] || "";
 }
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+
 async function deleteMedia(media: Media) {
-  try {
-    // Start a transaction to ensure both operations complete or neither does
-    await prisma.$transaction(async (tx) => {
-      // First verify the media still exists and hasn't been deleted
-      const currentMedia = await tx.media.findUnique({
-        where: { id: media.id },
+  let attempt = 0;
+  
+  while (attempt < MAX_RETRIES) {
+    try {
+      // Start a transaction to ensure both operations complete or neither does
+      await prisma.$transaction(async (tx) => {
+        // First verify the media still exists and hasn't been deleted
+        const currentMedia = await tx.media.findUnique({
+          where: { id: media.id },
+        });
+
+        if (!currentMedia) {
+          console.log(`Media ${media.id} already deleted from database`);
+          return;
+        }
+
+        // Delete from database first
+        await tx.media.delete({
+          where: { id: media.id },
+        });
+
+        // Then attempt storage deletion
+        const fileName = `${media.slug}${getExtension(media.mimeType)}`;
+        const { error } = await supabase.storage.from("media").remove([fileName]);
+        
+        if (error) {
+          // Log the error but don't throw - the database deletion is more important
+          console.error(`Failed to delete from storage: ${fileName}`, error);
+        } else {
+          console.log(`Successfully deleted media ${media.id} (${fileName})`);
+        }
       });
-
-      if (!currentMedia) {
-        console.log(`Media ${media.id} already deleted from database`);
-        return;
-      }
-
-      // Delete from database first
-      await tx.media.delete({
-        where: { id: media.id },
-      });
-
-      // Then attempt storage deletion
-      const fileName = `${media.slug}${getExtension(media.mimeType)}`;
-      const { error } = await supabase.storage.from("media").remove([fileName]);
       
-      if (error) {
-        // Log the error but don't throw - the database deletion is more important
-        console.error(`Failed to delete from storage: ${fileName}`, error);
-      } else {
-        console.log(`Successfully deleted media ${media.id} (${fileName})`);
+      // If we get here, the operation was successful
+      return;
+      
+    } catch (error) {
+      attempt++;
+      
+      // Only retry on connection errors
+      if (error instanceof Error && 
+          (error.message.includes('Connection') || 
+           error.message.includes('timeout') ||
+           error.message.includes('disconnect'))) {
+        
+        if (attempt < MAX_RETRIES) {
+          const delayMs = BASE_DELAY_MS * attempt;
+          console.log(`Attempt ${attempt} failed, retrying in ${delayMs}ms...`);
+          await sleep(delayMs);
+          continue;
+        }
       }
-    });
-  } catch (error) {
-    console.error(`Error deleting media ${media.id}:`, error);
-    throw error; // Re-throw to handle in the page component
+      
+      // For other errors or if we've exhausted retries, log and throw
+      console.error(`Error deleting media ${media.id} (attempt ${attempt}/${MAX_RETRIES}):`, error);
+      throw error;
+    }
   }
 }
 
