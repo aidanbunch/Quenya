@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Quenya",
-  description: "Share images securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
+  description: "Share media securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
   viewport: {
     width: "device-width",
     initialScale: 1,
@@ -22,13 +22,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Quenya",
-    description: "Share images securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
+    description: "Share media securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Quenya",
-    description: "Share images securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
+    description: "Share media securely and temporarily. Your uploads disappear after 24 hours or after first view - your choice.",
   },
   metadataBase: new URL("https://quenya.vercel.app"),
 };

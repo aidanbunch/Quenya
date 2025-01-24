@@ -1,14 +1,16 @@
-import { ImageUploader } from "@/components/ImageUploader";
+import { MediaUploader } from "@/components/MediaUploader";
 import { ImageViewer } from "@/components/ImageViewer";
+import { VideoViewer } from "@/components/VideoViewer";
 import prisma from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
 
 // Define the type since Prisma doesn't export it
-type Image = {
+type Media = {
   id: string;
   slug: string;
   url: string;
   mimeType: string;
+  mediaType: string;
   size: number;
   viewOnce: boolean;
   viewed: boolean;
@@ -21,18 +23,21 @@ function getExtension(mimeType: string): string {
     "image/png": ".png",
     "image/gif": ".gif",
     "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/ogg": ".ogv",
   };
   return extensions[mimeType] || "";
 }
 
-async function deleteImage(image: Image) {
+async function deleteMedia(media: Media) {
   // Delete from storage
-  const fileName = `${image.slug}${getExtension(image.mimeType)}`;
-  await supabase.storage.from("images").remove([fileName]);
+  const fileName = `${media.slug}${getExtension(media.mimeType)}`;
+  await supabase.storage.from("media").remove([fileName]);
   
   // Delete from database
-  await prisma.image.delete({
-    where: { id: image.id },
+  await prisma.media.delete({
+    where: { id: media.id },
   });
 }
 
@@ -45,44 +50,45 @@ export default async function SlugPage({
 }) {
   const { slug } = await params;
   
-  const image = await prisma.image.findUnique({
+  const media = await prisma.media.findUnique({
     where: { slug },
   });
 
-  // If no image exists, show the upload interface
-  if (!image) {
-    return <ImageUploader slug={slug} />;
+  // If no media exists, show the upload interface
+  if (!media) {
+    return <MediaUploader slug={slug} />;
   }
 
-  // Check if image has expired
-  const isExpired = new Date() > new Date(image.expiresAt);
+  // Check if media has expired
+  const isExpired = new Date() > new Date(media.expiresAt);
   if (isExpired) {
-    await deleteImage(image);
-    return <ImageUploader slug={slug} />;
+    await deleteMedia(media);
+    return <MediaUploader slug={slug} />;
   }
 
-  // For view-once images, mark as viewed if this is the first view
-  if (image.viewOnce && !image.viewed) {
-    await prisma.image.update({
-      where: { id: image.id },
+  // For view-once media, mark as viewed if this is the first view
+  if (media.viewOnce && !media.viewed) {
+    await prisma.media.update({
+      where: { id: media.id },
       data: { viewed: true },
     });
   }
   
-  // If it's a view-once image that's been viewed (but not expired), delete it
-  if (image.viewOnce && image.viewed) {
-    await deleteImage(image);
-    return <ImageUploader slug={slug} />;
+  // If it's a view-once media that's been viewed (but not expired), delete it
+  if (media.viewOnce && media.viewed) {
+    await deleteMedia(media);
+    return <MediaUploader slug={slug} />;
   }
 
-  // Show the viewer interface with the data
-  return <ImageViewer 
+  // Show the appropriate viewer interface with the data
+  const ViewerComponent = media.mediaType === "video" ? VideoViewer : ImageViewer;
+  return <ViewerComponent 
     slug={slug}
     initialData={{
-      url: image.url,
-      mimeType: image.mimeType,
-      viewOnce: image.viewOnce,
-      expiresAt: image.expiresAt.toISOString(),
+      url: media.url,
+      mimeType: media.mimeType,
+      viewOnce: media.viewOnce,
+      expiresAt: media.expiresAt.toISOString(),
     }}
   />;
 } 

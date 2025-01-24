@@ -49,7 +49,7 @@ export default function Home() {
             QUENYA
           </h1>
           <p className="text-center text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
-            SHARE IMAGES THAT SELF-DESTRUCT AFTER VIEWING
+            SHARE MEDIA THAT SELF-DESTRUCTS AFTER VIEWING
           </p>
         </div>
 
@@ -72,10 +72,10 @@ export default function Home() {
 
         <div className="text-center space-y-1">
           <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)]">
-            ENTER ANY URL TO UPLOAD OR VIEW AN IMAGE
+            ENTER ANY URL TO UPLOAD OR VIEW MEDIA
           </p>
           <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)]">
-            THE IMAGE IS DESTROYED AFTER FIRST VIEW OR 24 HOURS
+            THE MEDIA IS DESTROYED AFTER FIRST VIEW OR 24 HOURS
           </p>
         </div>
       </div>

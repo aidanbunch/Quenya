@@ -11,6 +11,7 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File;
     const slug = (formData.get("slug") as string) || nanoid(10);
     const viewOnce = formData.get("viewOnce") === "true";
+    const mediaType = formData.get("mediaType") as string || "image";
 
     if (!file) {
       return NextResponse.json(
@@ -19,16 +20,24 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (100MB limit)
+    if (file.size > 100 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "File size must be less than 10MB" },
+        { error: "File size must be less than 100MB" },
         { status: 400 }
       );
     }
 
     // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "video/mp4",
+      "video/webm",
+      "video/ogg"
+    ];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         { error: "File type not supported" },
@@ -40,7 +49,7 @@ export async function POST(req: Request) {
     const fileBuffer = await file.arrayBuffer();
     const fileName = `${slug}${getExtension(file.type)}`;
     const { error: uploadError } = await supabase.storage
-      .from("images")
+      .from("media")
       .upload(fileName, fileBuffer, {
         contentType: file.type,
         upsert: true,
@@ -52,7 +61,7 @@ export async function POST(req: Request) {
 
     // Get the public URL
     const { data: { publicUrl } } = supabase.storage
-      .from("images")
+      .from("media")
       .getPublicUrl(fileName);
 
     // Calculate expiration time (24 hours from now)
@@ -60,11 +69,12 @@ export async function POST(req: Request) {
     expiresAt.setHours(expiresAt.getHours() + 24);
 
     // Create database record
-    const image = await prisma.image.create({
+    const media = await prisma.media.create({
       data: {
         slug,
         url: publicUrl,
         mimeType: file.type,
+        mediaType,
         size: file.size,
         viewOnce,
         expiresAt,
@@ -73,8 +83,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
       success: true,
-      message: "Image uploaded successfully!",
-      slug: image.slug
+      message: "Media uploaded successfully!",
+      slug: media.slug
     });
   } catch (error) {
     console.error("Upload error:", error);
@@ -91,6 +101,9 @@ function getExtension(mimeType: string): string {
     "image/png": ".png",
     "image/gif": ".gif",
     "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/ogg": ".ogv",
   };
   return extensions[mimeType] || "";
 } 

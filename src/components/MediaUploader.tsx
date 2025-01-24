@@ -25,11 +25,11 @@ const UPLOAD_ASCII = `
 ⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠻⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀
 `;
 
-interface ImageUploaderProps {
+interface MediaUploaderProps {
   slug: string;
 }
 
-export function ImageUploader({ slug }: ImageUploaderProps) {
+export function MediaUploader({ slug }: MediaUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewOnce, setViewOnce] = useState(true);
@@ -50,6 +50,7 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
       formData.append("file", file);
       formData.append("slug", slug);
       formData.append("viewOnce", viewOnce.toString());
+      formData.append("mediaType", file.type.startsWith("video/") ? "video" : "image");
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -75,20 +76,20 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
     const items = event.clipboardData?.items;
     if (!items) return;
 
-    let imageFile: File | null = null;
+    let mediaFile: File | null = null;
 
     for (const item of Array.from(items)) {
-      if (item.type.startsWith('image/')) {
+      if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
         const file = item.getAsFile();
         if (file) {
-          imageFile = file;
+          mediaFile = file;
           break;
         }
       }
     }
 
-    if (imageFile) {
-      onDrop([imageFile]);
+    if (mediaFile) {
+      onDrop([mediaFile]);
     }
   }, [onDrop]);
 
@@ -106,8 +107,11 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
       "image/png": [],
       "image/gif": [],
       "image/webp": [],
+      "video/mp4": [],
+      "video/webm": [],
+      "video/ogg": [],
     },
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 100 * 1024 * 1024, // 100MB for videos
     multiple: false,
   });
 
@@ -142,12 +146,12 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
               UPLOAD SUCCESSFUL
             </h2>
             <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
-              YOUR IMAGE HAS BEEN UPLOADED
+              YOUR MEDIA HAS BEEN UPLOADED
             </p>
           </div>
           <div className="space-y-2">
             <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)] text-center">
-              YOU CAN ACCESS YOUR IMAGE AT:
+              YOU CAN ACCESS YOUR MEDIA AT:
             </p>
             <div className="flex rounded border border-gray-800 bg-gray-900/50 group relative">
               <code className="w-full px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)] text-center">
@@ -199,9 +203,9 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
 
       <div className="w-full space-y-8 px-4">
         <div className="space-y-2">
-          <h1 className="text-2xl font-[family-name:var(--font-geist-mono)] text-center">UPLOAD AN IMAGE</h1>
+          <h1 className="text-2xl font-[family-name:var(--font-geist-mono)] text-center">UPLOAD MEDIA</h1>
           <p className="text-center text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
-            THIS URL IS AVAILABLE FOR YOUR IMAGE
+            THIS URL IS AVAILABLE FOR YOUR MEDIA
           </p>
         </div>
 
@@ -217,14 +221,14 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
           {isUploading ? (
             <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">UPLOADING...</p>
           ) : isDragActive ? (
-            <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">DROP THE IMAGE HERE...</p>
+            <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">DROP THE FILE HERE...</p>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
-                DRAG AND DROP AN IMAGE HERE, CLICK TO SELECT, OR PASTE FROM CLIPBOARD
+                DRAG AND DROP A FILE HERE, CLICK TO SELECT, OR PASTE FROM CLIPBOARD
               </p>
               <p className="text-xs text-gray-500 font-[family-name:var(--font-geist-mono)]">
-                SUPPORTED FORMATS: JPG, PNG, GIF, WEBP (MAX 10MB)
+                SUPPORTED FORMATS: JPG, PNG, GIF, WEBP, MP4, WEBM, OGV (MAX 100MB)
               </p>
             </div>
           )}
@@ -241,7 +245,7 @@ export function ImageUploader({ slug }: ImageUploaderProps) {
             htmlFor="view-once"
             className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]"
           >
-            DELETE AFTER FIRST VIEW (OR AFTER 24 HOURS)
+            {viewOnce ? "DELETE AFTER FIRST VIEW" : "DELETE AFTER 24 HOURS"}
           </Label>
         </div>
 
