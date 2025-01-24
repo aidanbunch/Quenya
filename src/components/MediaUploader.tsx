@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -36,6 +36,12 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedSlug, setUploadedSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const hasInteracted = useRef(false);
+
+  const handleViewOnceChange = (checked: boolean) => {
+    hasInteracted.current = true;
+    setViewOnce(checked);
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -238,7 +244,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
           <Switch
             id="view-once"
             checked={viewOnce}
-            onCheckedChange={setViewOnce}
+            onCheckedChange={handleViewOnceChange}
             className="bg-gray-900/50 border border-gray-800 data-[state=checked]:bg-gray-700"
           />
           <Label 
@@ -248,19 +254,27 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
             <span className="mr-2">DELETE AFTER</span>
             <div className="relative h-5 w-24">
               <span
-                className={`absolute inset-0 flex items-center transition-all duration-500 ${
-                  viewOnce
-                    ? "opacity-100 clip-path-morph-in"
-                    : "opacity-0 clip-path-morph-out"
+                className={`absolute inset-0 flex items-center ${
+                  !hasInteracted.current
+                    ? viewOnce ? "opacity-100" : "opacity-0"
+                    : `transition-all duration-500 ${
+                        viewOnce
+                          ? "opacity-100 clip-path-morph-in"
+                          : "opacity-0 clip-path-morph-out"
+                      }`
                 }`}
               >
                 FIRST VIEW
               </span>
               <span
-                className={`absolute inset-0 flex items-center transition-all duration-500 ${
-                  viewOnce
-                    ? "opacity-0 clip-path-morph-out"
-                    : "opacity-100 clip-path-morph-in"
+                className={`absolute inset-0 flex items-center ${
+                  !hasInteracted.current
+                    ? viewOnce ? "opacity-0" : "opacity-100"
+                    : `transition-all duration-500 ${
+                        viewOnce
+                          ? "opacity-0 clip-path-morph-out"
+                          : "opacity-100 clip-path-morph-in"
+                      }`
                 }`}
               >
                 24 HOURS
