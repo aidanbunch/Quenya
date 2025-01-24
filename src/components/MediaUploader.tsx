@@ -51,7 +51,6 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedSlug, setUploadedSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const hasInteracted = useRef(false);
   const uploadRef = useRef<tus.Upload | null>(null);
 
@@ -93,7 +92,6 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
     setIsUploading(true);
     setError(null);
     setUploadSuccess(false);
-    setUploadProgress(0);
 
     try {
       // Try to get existing session
@@ -134,10 +132,6 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
             setError(error.message || "Upload failed");
             setIsUploading(false);
             reject(error);
-          },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
-            setUploadProgress(parseFloat(percentage));
           },
           onSuccess: async () => {
             try {
