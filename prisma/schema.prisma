@@ -15,11 +15,12 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model Image {
+model Media {
   id        String   @id @default(cuid())
   slug      String   @unique
   url       String
   mimeType  String
+  mediaType String   // "image" or "video"
   size      Int
   createdAt DateTime @default(now())
   expiresAt DateTime

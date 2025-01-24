@@ -6,8 +6,8 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    // Find all expired images
-    const expiredImages = await prisma.image.findMany({
+    // Find all expired media
+    const expiredMedia = await prisma.media.findMany({
       where: {
         expiresAt: {
           lt: new Date(),
@@ -16,17 +16,17 @@ export async function GET() {
     });
 
     // Delete each expired image from storage and database
-    for (const image of expiredImages) {
+    for (const image of expiredMedia) {
       const fileName = `${image.slug}${getExtension(image.mimeType)}`;
-      await supabase.storage.from("images").remove([fileName]);
-      await prisma.image.delete({
+      await supabase.storage.from("media").remove([fileName]);
+      await prisma.media.delete({
         where: { id: image.id },
       });
     }
 
     return NextResponse.json({
       success: true,
-      cleaned: expiredImages.length,
+      cleaned: expiredMedia.length,
     });
   } catch (error) {
     console.error("Cleanup error:", error);
@@ -43,6 +43,9 @@ function getExtension(mimeType: string): string {
     "image/png": ".png",
     "image/gif": ".gif",
     "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/ogg": ".ogv",
   };
   return extensions[mimeType] || "";
 } 
