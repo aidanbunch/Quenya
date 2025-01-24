@@ -1,29 +1,32 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { supabase } from "@/lib/supabase";
 import { nanoid } from "nanoid";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    const slug = (formData.get("slug") as string) || nanoid(10);
-    const viewOnce = formData.get("viewOnce") === "true";
-    const mediaType = formData.get("mediaType") as string || "image";
+    const body = await req.json();
+    const { 
+      slug = nanoid(10),
+      url,
+      mimeType,
+      mediaType = "image",
+      size,
+      viewOnce 
+    } = body;
 
-    if (!file) {
+    if (!url) {
       return NextResponse.json(
-        { error: "No file provided" },
+        { error: "No URL provided" },
         { status: 400 }
       );
     }
 
-    // Validate file size (100MB limit)
-    if (file.size > 100 * 1024 * 1024) {
+    // Validate file size (50MB limit)
+    if (size > 50 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "File size must be less than 100MB" },
+        { error: "File size must be less than 50MB" },
         { status: 400 }
       );
     }
@@ -38,31 +41,12 @@ export async function POST(req: Request) {
       "video/webm",
       "video/ogg"
     ];
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(mimeType)) {
       return NextResponse.json(
         { error: "File type not supported" },
         { status: 400 }
       );
     }
-
-    // Upload to Supabase Storage
-    const fileBuffer = await file.arrayBuffer();
-    const fileName = `${slug}${getExtension(file.type)}`;
-    const { error: uploadError } = await supabase.storage
-      .from("media")
-      .upload(fileName, fileBuffer, {
-        contentType: file.type,
-        upsert: true,
-      });
-
-    if (uploadError) {
-      throw uploadError;
-    }
-
-    // Get the public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from("media")
-      .getPublicUrl(fileName);
 
     // Calculate expiration time (24 hours from now)
     const expiresAt = new Date();
@@ -72,10 +56,10 @@ export async function POST(req: Request) {
     const media = await prisma.media.create({
       data: {
         slug,
-        url: publicUrl,
-        mimeType: file.type,
+        url,
+        mimeType,
         mediaType,
-        size: file.size,
+        size,
         viewOnce,
         expiresAt,
       },
@@ -89,21 +73,8 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { error: "Error uploading file" },
+      { error: "Error processing upload" },
       { status: 500 }
     );
   }
-}
-
-function getExtension(mimeType: string): string {
-  const extensions: Record<string, string> = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/gif": ".gif",
-    "image/webp": ".webp",
-    "video/mp4": ".mp4",
-    "video/webm": ".webm",
-    "video/ogg": ".ogv",
-  };
-  return extensions[mimeType] || "";
 } 

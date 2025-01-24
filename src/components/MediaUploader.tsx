@@ -6,6 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import * as tus from "tus-js-client";
+import { supabaseClient } from "@/lib/supabase-client";
 
 const UPLOAD_ASCII = `
 ⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⢠⡆⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -25,6 +27,19 @@ const UPLOAD_ASCII = `
 ⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠻⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀
 `;
 
+function getExtension(mimeType: string): string {
+  const extensions: Record<string, string> = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/ogg": ".ogv",
+  };
+  return extensions[mimeType] || "";
+}
+
 interface MediaUploaderProps {
   slug: string;
 }
@@ -36,46 +51,130 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadedSlug, setUploadedSlug] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const hasInteracted = useRef(false);
+  const uploadRef = useRef<tus.Upload | null>(null);
 
   const handleViewOnceChange = (checked: boolean) => {
     hasInteracted.current = true;
     setViewOnce(checked);
   };
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
-
-    const file = acceptedFiles[0];
-    setIsUploading(true);
-    setError(null);
-    setUploadSuccess(false);
-
+  const createDatabaseEntry = async (file: File, publicUrl: string) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("slug", slug);
-      formData.append("viewOnce", viewOnce.toString());
-      formData.append("mediaType", file.type.startsWith("video/") ? "video" : "image");
-
       const response = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slug,
+          url: publicUrl,
+          mimeType: file.type,
+          mediaType: file.type.startsWith("video/") ? "video" : "image",
+          size: file.size,
+          viewOnce,
+        }),
       });
 
       const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || "Failed to create database entry");
       }
 
-      setUploadSuccess(true);
-      setUploadedSlug(data.slug);
+      return data.slug;
+    } catch (error) {
+      console.error("Database entry error:", error);
+      throw new Error("Failed to create database entry");
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    setIsUploading(true);
+    setError(null);
+    setUploadSuccess(false);
+    setUploadProgress(0);
+
+    try {
+      // Try to get existing session
+      let { data: { session } } = await supabaseClient.auth.getSession();
+      
+      // If no session exists, sign in anonymously
+      if (!session) {
+        const { error: signInError } = await supabaseClient.auth.signInAnonymously();
+        if (signInError) throw new Error(signInError.message);
+        
+        // Get the new session after sign in
+        const { data: { session: newSession }, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError || !newSession) throw new Error("No session found after sign in");
+        session = newSession;
+      }
+
+      const fileName = `${slug}${getExtension(file.type)}`;
+
+      return new Promise((resolve, reject) => {
+        uploadRef.current = new tus.Upload(file, {
+          endpoint: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/upload/resumable`,
+          retryDelays: [0, 3000, 5000, 10000, 20000],
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            'x-upsert': 'true',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName: "media",
+            objectName: fileName,
+            contentType: file.type,
+            cacheControl: "3600",
+          },
+          chunkSize: 6 * 1024 * 1024,
+          onError: (error) => {
+            console.error("Upload failed:", error);
+            setError(error.message || "Upload failed");
+            setIsUploading(false);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const percentage = ((bytesUploaded / bytesTotal) * 100).toFixed(2);
+            setUploadProgress(parseFloat(percentage));
+          },
+          onSuccess: async () => {
+            try {
+              const { data } = supabaseClient.storage
+                .from("media")
+                .getPublicUrl(fileName);
+
+              const newSlug = await createDatabaseEntry(file, data.publicUrl);
+              setUploadedSlug(newSlug);
+              setUploadSuccess(true);
+              resolve(newSlug);
+            } catch (error) {
+              reject(error);
+            } finally {
+              setIsUploading(false);
+            }
+          },
+        });
+
+        uploadRef.current.findPreviousUploads().then((previousUploads) => {
+          if (previousUploads.length) {
+            uploadRef.current?.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          uploadRef.current?.start();
+        });
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
       setIsUploading(false);
+      throw err;
     }
+  };
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    const file = acceptedFiles[0];
+    await handleUpload(file);
   }, [slug, viewOnce]);
 
   const handlePaste = useCallback(async (event: ClipboardEvent) => {
@@ -117,7 +216,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
       "video/webm": [],
       "video/ogg": [],
     },
-    maxSize: 100 * 1024 * 1024, // 100MB for videos
+    maxSize: 50 * 1024 * 1024, // 50MB for videos
     multiple: false,
   });
 
@@ -225,7 +324,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
         >
           <input {...getInputProps()} />
           {isUploading ? (
-            <div className="flex items-center justify-center">
+            <div className="space-y-2">
               <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
                 UPLOADING
                 <span className="inline-flex ml-[2px]">
@@ -236,7 +335,9 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
               </p>
             </div>
           ) : isDragActive ? (
-            <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">DROP THE FILE HERE...</p>
+            <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
+              DROP THE FILE HERE...
+            </p>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
