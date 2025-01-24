@@ -338,7 +338,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
                 DRAG AND DROP A FILE HERE, CLICK TO SELECT, OR PASTE FROM CLIPBOARD
               </p>
               <p className="text-xs text-gray-500 font-[family-name:var(--font-geist-mono)]">
-                SUPPORTED FORMATS: JPG, PNG, GIF, WEBP, MP4, WEBM, OGV (MAX 100MB)
+                SUPPORTED FORMATS: JPG, PNG, GIF, WEBP, MP4, WEBM, OGV (MAX 50MB)
               </p>
             </div>
           )}
