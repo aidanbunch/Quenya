@@ -243,9 +243,29 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
           />
           <Label 
             htmlFor="view-once"
-            className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]"
+            className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)] relative h-5 flex items-center select-none"
           >
-            {viewOnce ? "DELETE AFTER FIRST VIEW" : "DELETE AFTER 24 HOURS"}
+            <span className="mr-2">DELETE AFTER</span>
+            <div className="relative h-5 w-24">
+              <span
+                className={`absolute inset-0 flex items-center transition-all duration-500 ${
+                  viewOnce
+                    ? "opacity-100 clip-path-morph-in"
+                    : "opacity-0 clip-path-morph-out"
+                }`}
+              >
+                FIRST VIEW
+              </span>
+              <span
+                className={`absolute inset-0 flex items-center transition-all duration-500 ${
+                  viewOnce
+                    ? "opacity-0 clip-path-morph-out"
+                    : "opacity-100 clip-path-morph-in"
+                }`}
+              >
+                24 HOURS
+              </span>
+            </div>
           </Label>
         </div>
 

@@ -100,3 +100,31 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.clip-path-morph-in {
+  clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  animation: morph-in 500ms ease-in-out forwards;
+}
+
+.clip-path-morph-out {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  animation: morph-out 500ms ease-in-out forwards;
+}
+
+@keyframes morph-in {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+@keyframes morph-out {
+  0% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+}
