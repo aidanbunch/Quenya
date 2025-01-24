@@ -9,6 +9,25 @@ export default {
   ],
   theme: {
   	extend: {
+  		keyframes: {
+  			'dot-1': {
+  				'0%, 100%': { opacity: '0' },
+  				'20%, 80%': { opacity: '1' }
+  			},
+  			'dot-2': {
+  				'0%, 20%, 100%': { opacity: '0' },
+  				'40%, 80%': { opacity: '1' }
+  			},
+  			'dot-3': {
+  				'0%, 40%, 100%': { opacity: '0' },
+  				'60%, 80%': { opacity: '1' }
+  			}
+  		},
+  		animation: {
+  			'dot-1': 'dot-1 1.5s infinite',
+  			'dot-2': 'dot-2 1.5s infinite',
+  			'dot-3': 'dot-3 1.5s infinite'
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

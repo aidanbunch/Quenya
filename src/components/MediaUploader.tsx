@@ -225,7 +225,16 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
         >
           <input {...getInputProps()} />
           {isUploading ? (
-            <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">UPLOADING...</p>
+            <div className="flex items-center justify-center">
+              <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">
+                UPLOADING
+                <span className="inline-flex ml-[2px]">
+                  <span className="animate-dot-1">.</span>
+                  <span className="animate-dot-2">.</span>
+                  <span className="animate-dot-3">.</span>
+                </span>
+              </p>
+            </div>
           ) : isDragActive ? (
             <p className="text-sm text-gray-400 font-[family-name:var(--font-geist-mono)]">DROP THE FILE HERE...</p>
           ) : (
