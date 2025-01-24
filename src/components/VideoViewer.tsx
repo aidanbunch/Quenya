@@ -460,12 +460,9 @@ export function VideoViewer({ slug, initialData, className }: VideoViewerProps) 
                   )}
                   {/* Scrubber */}
                   <div 
-                    className="absolute h-3 w-3 bg-gray-400 rounded-full -translate-y-1 -translate-x-1.5 opacity-0 group-hover:opacity-100 transition-all duration-150"
+                    className="absolute h-3 w-3 bg-gray-400 rounded-full -translate-y-1 -translate-x-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                     style={{ left: `${(currentTime / duration) * 100}%` }}
                   />
-                  <div className="absolute h-full w-full -top-2 opacity-0 group-hover:opacity-100">
-                    <div className="absolute h-1 w-full bg-gray-400/20 rounded" />
-                  </div>
                 </div>
               </div>
 
