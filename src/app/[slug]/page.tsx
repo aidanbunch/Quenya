@@ -1,8 +1,10 @@
 import { MediaUploader } from "@/components/MediaUploader";
 import { ImageViewer } from "@/components/ImageViewer";
 import { VideoViewer } from "@/components/VideoViewer";
+import { PDFViewer } from "@/components/PDFViewer";
 import prisma from "@/lib/prisma";
 import { supabase } from "@/lib/supabase";
+import { getFileExtension } from "@/lib/utils";
 
 // Define the type since Prisma doesn't export it
 type Media = {
@@ -16,19 +18,6 @@ type Media = {
   viewed: boolean;
   expiresAt: Date;
 };
-
-function getExtension(mimeType: string): string {
-  const extensions: Record<string, string> = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/gif": ".gif",
-    "image/webp": ".webp",
-    "video/mp4": ".mp4",
-    "video/webm": ".webm",
-    "video/ogg": ".ogv",
-  };
-  return extensions[mimeType] || "";
-}
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -58,7 +47,7 @@ async function deleteMedia(media: Media) {
         });
 
         // Then attempt storage deletion
-        const fileName = `${media.slug}${getExtension(media.mimeType)}`;
+        const fileName = `${media.slug}${getFileExtension(media.mimeType)}`;
         const { error } = await supabase.storage.from("media").remove([fileName]);
         
         if (error) {
@@ -138,8 +127,21 @@ export default async function SlugPage({
       return <MediaUploader slug={slug} />;
     }
 
+    // Get the appropriate viewer component based on mediaType
+    const getViewerComponent = (mediaType: string) => {
+      switch (mediaType) {
+        case "video":
+          return VideoViewer;
+        case "pdf":
+          return PDFViewer;
+        case "image":
+        default:
+          return ImageViewer;
+      }
+    };
+
     // Show the appropriate viewer interface with the data
-    const ViewerComponent = media.mediaType === "video" ? VideoViewer : ImageViewer;
+    const ViewerComponent = getViewerComponent(media.mediaType);
     return <ViewerComponent 
       slug={slug}
       initialData={{

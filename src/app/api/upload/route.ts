@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { nanoid } from "nanoid";
+import { SUPPORTED_MIME_TYPES } from "@/lib/utils";
 
 export const runtime = "nodejs";
 
@@ -31,17 +32,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate file type
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-      "video/ogg"
-    ];
-    if (!allowedTypes.includes(mimeType)) {
+    if (!Object.keys(SUPPORTED_MIME_TYPES).includes(mimeType)) {
       return NextResponse.json(
         { error: "File type not supported" },
         { status: 400 }

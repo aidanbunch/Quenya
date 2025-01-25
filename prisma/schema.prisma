@@ -20,7 +20,7 @@ model Media {
   slug      String   @unique
   url       String
   mimeType  String
-  mediaType String   // "image" or "video"
+  mediaType String   // "image" or "video" or "pdf"
   size      Int
   createdAt DateTime @default(now())
   expiresAt DateTime
