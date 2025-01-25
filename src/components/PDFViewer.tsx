@@ -86,14 +86,14 @@ const ResultItem = ({ result }: ResultItemProps) => {
 
   return (
     <div
-      className="flex py-2 hover:bg-gray-800/50 flex-col cursor-pointer"
+      className="flex py-2 hover:bg-gray-800/50 flex-col cursor-pointer transition-all duration-200 ease-in-out"
       onClick={onClick}
     >
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-300 font-[family-name:var(--font-geist-mono)]">{result.text}</p>
+        <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)] line-clamp-2">{result.text}</p>
       </div>
-      <div className="flex items-center gap-4 text-sm text-gray-400">
-        <span className="ml-auto font-[family-name:var(--font-geist-mono)]">Page {result.pageNumber}</span>
+      <div className="flex items-center gap-4 mt-1">
+        <span className="text-[10px] text-gray-500 font-[family-name:var(--font-geist-mono)]">PAGE {result.pageNumber}</span>
       </div>
     </div>
   );
@@ -136,6 +136,11 @@ const SearchUI = ({ onClose }: { onClose: () => void }) => {
   const { search } = useSearch();
   const [searching, setSearching] = useState(false);
   const [localResults, setLocalResults] = useState<SearchResult[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const performSearch = async () => {
@@ -184,6 +189,7 @@ const SearchUI = ({ onClose }: { onClose: () => void }) => {
     <div className="w-64 bg-gray-900/80 backdrop-blur border border-gray-800 rounded-lg overflow-hidden shadow-xl">
       <div className="p-2 border-b border-gray-800 flex items-center gap-2">
         <input
+          ref={inputRef}
           type="text"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
@@ -204,28 +210,36 @@ const SearchUI = ({ onClose }: { onClose: () => void }) => {
         </Button>
       </div>
       <div className="max-h-64 overflow-y-auto p-2">
-        {searching ? (
-          <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)] text-center py-2">
-            SEARCHING...
-          </p>
-        ) : localResults?.length > 0 ? (
-          <>
-            <ResultGroup results={localResults} displayCount={limit} />
-            {localResults.length > limit && (
-              <Button
-                variant="ghost"
-                className="w-full mt-2 text-xs font-[family-name:var(--font-geist-mono)] text-gray-400 hover:bg-gray-800"
-                onClick={handleLoadMore}
-              >
-                LOAD MORE RESULTS
-              </Button>
-            )}
-          </>
-        ) : debouncedSearchText ? (
-          <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)] text-center py-2">
-            NO RESULTS FOUND
-          </p>
-        ) : null}
+        <div className="space-y-2">
+          {searching ? (
+            <div className="transition-all duration-300 ease-in-out">
+              <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)] text-center py-2">
+                SEARCHING...
+              </p>
+            </div>
+          ) : localResults?.length > 0 ? (
+            <div className="transition-all duration-300 ease-in-out">
+              <ResultGroup results={localResults} displayCount={limit} />
+              {localResults.length > limit && (
+                <div className="transition-all duration-300 ease-in-out transform">
+                  <Button
+                    variant="ghost"
+                    className="w-full mt-2 text-xs font-[family-name:var(--font-geist-mono)] text-gray-400 hover:bg-gray-800"
+                    onClick={handleLoadMore}
+                  >
+                    LOAD MORE RESULTS
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : debouncedSearchText ? (
+            <div className="transition-all duration-300 ease-in-out">
+              <p className="text-xs text-gray-400 font-[family-name:var(--font-geist-mono)] text-center py-2">
+                NO RESULTS FOUND
+              </p>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -307,15 +321,24 @@ export function PDFViewer({ slug, initialData, className }: PDFViewerProps) {
             </div>
           )}
 
-          {error && (
-            <div className="px-4">
-              <div className="p-2 border border-red-900/50 bg-red-900/20 rounded text-center">
-                <p className="text-xs text-red-400 font-[family-name:var(--font-geist-mono)]">
-                  {error}
-                </p>
+          <div 
+            className={cn(
+              "transition-all duration-300 ease-in-out transform",
+              error 
+                ? "opacity-100 translate-y-0" 
+                : "opacity-0 -translate-y-2 pointer-events-none"
+            )}
+          >
+            {error && (
+              <div className="px-4">
+                <div className="p-2 border border-red-900/50 bg-red-900/20 rounded text-center">
+                  <p className="text-xs text-red-400 font-[family-name:var(--font-geist-mono)]">
+                    {error}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <div 
             ref={containerRef}
@@ -376,11 +399,16 @@ export function PDFViewer({ slug, initialData, className }: PDFViewerProps) {
             </div>
 
             {/* Search Panel */}
-            {showSearch && (
-              <div className="absolute top-12 right-2 z-20">
-                <SearchUI onClose={() => setShowSearch(false)} />
-              </div>
-            )}
+            <div 
+              className={cn(
+                "absolute top-12 right-2 z-20 transition-all duration-300 ease-in-out transform",
+                showSearch 
+                  ? "translate-y-0 opacity-100 scale-100" 
+                  : "translate-y-2 opacity-0 scale-95 pointer-events-none"
+              )}
+            >
+              <SearchUI onClose={() => setShowSearch(false)} />
+            </div>
 
             <div className={cn(
               "grid h-full transition-all duration-500 ease-in-out",
