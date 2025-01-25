@@ -8,6 +8,7 @@ import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import * as tus from "tus-js-client";
 import { supabaseClient } from "@/lib/supabase-client";
+import { getFileExtension, SUPPORTED_MIME_TYPES } from "@/lib/utils";
 
 const UPLOAD_ASCII = `
 ⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⢠⡆⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -26,19 +27,6 @@ const UPLOAD_ASCII = `
 ⠀⠀⠀⠀⠀⠀⠀⣸⠟⠁⠀⠀⠀⠘⣿⡇⠀⠀⠀⠀⠙⢷⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠻⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀
 `;
-
-function getExtension(mimeType: string): string {
-  const extensions: Record<string, string> = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/gif": ".gif",
-    "image/webp": ".webp",
-    "video/mp4": ".mp4",
-    "video/webm": ".webm",
-    "video/ogg": ".ogv",
-  };
-  return extensions[mimeType] || "";
-}
 
 interface MediaUploaderProps {
   slug: string;
@@ -61,6 +49,13 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
 
   const createDatabaseEntry = async (file: File, publicUrl: string) => {
     try {
+      const getMediaType = (mimeType: string) => {
+        if (mimeType.startsWith("image/")) return "image";
+        if (mimeType.startsWith("video/")) return "video";
+        if (mimeType === "application/pdf") return "pdf";
+        throw new Error("Unsupported media type");
+      };
+
       const response = await fetch("/api/upload", {
         method: "POST",
         headers: {
@@ -70,7 +65,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
           slug,
           url: publicUrl,
           mimeType: file.type,
-          mediaType: file.type.startsWith("video/") ? "video" : "image",
+          mediaType: getMediaType(file.type),
           size: file.size,
           viewOnce,
         }),
@@ -108,7 +103,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
         session = newSession;
       }
 
-      const fileName = `${slug}${getExtension(file.type)}`;
+      const fileName = `${slug}${getFileExtension(file.type)}`;
 
       return new Promise((resolve, reject) => {
         uploadRef.current = new tus.Upload(file, {
@@ -178,7 +173,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
     let mediaFile: File | null = null;
 
     for (const item of Array.from(items)) {
-      if (item.type.startsWith('image/') || item.type.startsWith('video/')) {
+      if (item.type in SUPPORTED_MIME_TYPES) {
         const file = item.getAsFile();
         if (file) {
           mediaFile = file;
@@ -201,16 +196,10 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "image/jpeg": [],
-      "image/png": [],
-      "image/gif": [],
-      "image/webp": [],
-      "video/mp4": [],
-      "video/webm": [],
-      "video/ogg": [],
-    },
-    maxSize: 50 * 1024 * 1024, // 50MB for videos
+    accept: Object.fromEntries(
+      Object.keys(SUPPORTED_MIME_TYPES).map(type => [type, []])
+    ),
+    maxSize: 50 * 1024 * 1024, // 50MB max
     multiple: false,
   });
 
@@ -338,7 +327,7 @@ export function MediaUploader({ slug }: MediaUploaderProps) {
                 DRAG AND DROP A FILE HERE, CLICK TO SELECT, OR PASTE FROM CLIPBOARD
               </p>
               <p className="text-xs text-gray-500 font-[family-name:var(--font-geist-mono)]">
-                SUPPORTED FORMATS: JPG, PNG, GIF, WEBP, MP4, WEBM, OGV (MAX 50MB)
+                SUPPORTED FORMATS: JPG, PNG, GIF, WEBP, MP4, WEBM, OGV, PDF (MAX 50MB)
               </p>
             </div>
           )}

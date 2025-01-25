@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Download, ZoomIn, ZoomOut, Maximize2, RotateCw, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getFileExtension } from "@/lib/utils";
 
 const VIEW_ASCII = `⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠰⢶⣶⣿⣷⣮⣄⠀⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⢀⣤⣾⣿⣶⣦⠘⠿⠛⠙⠁⣿⣿⠈⢛⣿⣦⣀⠀⠀⠀⠀⠀⠀⠀
@@ -131,7 +131,7 @@ export function ImageViewer({ slug, initialData, className }: ImageViewerProps) 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `quenya-${slug}${getExtension(initialData.mimeType)}`;
+      a.download = `quenya-${slug}${getFileExtension(initialData.mimeType)}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -139,16 +139,6 @@ export function ImageViewer({ slug, initialData, className }: ImageViewerProps) 
     } catch {
       setError("DOWNLOAD FAILED. PLEASE TRY AGAIN.");
     }
-  };
-
-  const getExtension = (mimeType: string) => {
-    const extensions: Record<string, string> = {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/gif": ".gif",
-      "image/webp": ".webp",
-    };
-    return extensions[mimeType] || "";
   };
 
   const toggleFullscreen = () => {

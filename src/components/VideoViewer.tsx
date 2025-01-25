@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import { cn, getFileExtension } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Play,
@@ -196,7 +196,7 @@ export function VideoViewer({ slug, initialData, className }: VideoViewerProps) 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `quenya-${slug}${getExtension(initialData.mimeType)}`;
+      a.download = `quenya-${slug}${getFileExtension(initialData.mimeType)}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -204,15 +204,6 @@ export function VideoViewer({ slug, initialData, className }: VideoViewerProps) 
     } catch {
       setError("DOWNLOAD FAILED. PLEASE TRY AGAIN.");
     }
-  };
-
-  const getExtension = (mimeType: string) => {
-    const extensions: Record<string, string> = {
-      "video/mp4": ".mp4",
-      "video/webm": ".webm",
-      "video/ogg": ".ogv",
-    };
-    return extensions[mimeType] || "";
   };
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
