@@ -1,10 +1,10 @@
 # Quenya
 
-Quenya is a minimalist media sharing service that destroys your media after they're viewed (or after 24 hours, if you prefer). Think of it as Snapchat for one-off media sharing, but through URLs instead of an app.
+Quenya is a minimalist media sharing service that destroys your media after it's viewed (or after 24 hours, if you prefer). Think of it as Snapchat for one-off media sharing, but through URLs instead of an app.
 
-<img width="1840" alt="Screenshot 2025-02-20 at 8 00 04 PM" src="https://github.com/user-attachments/assets/c05e3f5d-151d-4de5-92ad-ca4e4edd065e" />
+<img width="1840" alt="Screenshot 2025-02-20 at 8 00 04 PM" src="https://github.com/user-attachments/assets/c05e3f5d-151d-4de5-92ad-ca4e4edd065e" />
 
-Quenya lets you generate a unique URL, drop your media, and know it'll be gone after its job is done.
+Need to share an image, video, or PDF that shouldn't stick around forever? Quenya lets you generate a unique URL, drop your media, and know it'll be gone after its job is done.
 
 ## How it works
 
@@ -17,9 +17,9 @@ Quenya lets you generate a unique URL, drop your media, and know it'll be gone a
 ## The interesting bits
 
 - No accounts needed
-- Works with any media format you'd expect (JPG, PNG, GIF, WebP)
+- Supports images, videos, and PDFs with custom viewers for each
 - Drag & drop or click to upload
 - Built with Next.js, Supabase, and runs on Vercel
 - Open source because why not
 
-Made this because I love the idea of ephemeral content and wanted a dead-simple way to share media that clean up after themselves. Hope you find it useful!
+Made this because I love the idea of ephemeral content and wanted a dead-simple way to share media that cleans up after itself. Hope you find it useful!
