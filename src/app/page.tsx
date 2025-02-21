@@ -22,15 +22,6 @@ export default function Home() {
   const [slug, setSlug] = useState("");
   const router = useRouter();
 
-  // Prefetch the dynamic route as soon as we have a valid slug
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSlug = e.target.value;
-    setSlug(newSlug);
-    if (newSlug) {
-      router.prefetch(`/${newSlug}`);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (slug) {
@@ -70,9 +61,7 @@ export default function Home() {
             <input
               type="text"
               value={slug}
-              onChange={handleSlugChange}
-              onFocus={() => slug && router.prefetch(`/${slug}`)}
-              onMouseEnter={() => slug && router.prefetch(`/${slug}`)}
+              onChange={(e) => setSlug(e.target.value)}
               className="flex-1 bg-transparent px-3 py-2 text-sm font-[family-name:var(--font-geist-mono)] placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-gray-700"
               placeholder="your-transmission"
               pattern="[a-zA-Z0-9-_]+"
