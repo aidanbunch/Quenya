@@ -2,7 +2,7 @@
 
 Quenya is a minimalist media sharing service that destroys your media after they're viewed (or after 24 hours, if you prefer). Think of it as Snapchat for one-off media sharing, but through URLs instead of an app.
 
-[Screenshot will go here]
+<img width="1840" alt="Screenshot 2025-02-20 at 8 00 04 PM" src="https://github.com/user-attachments/assets/c05e3f5d-151d-4de5-92ad-ca4e4edd065e" />
 
 Quenya lets you generate a unique URL, drop your media, and know it'll be gone after its job is done.
 
