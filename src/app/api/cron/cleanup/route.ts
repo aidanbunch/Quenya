@@ -7,12 +7,25 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    // Find all expired media
+    // Find media to delete based on these conditions:
+    // 1. Media with viewOnce=false (24-hour expiry) where expiresAt is in the past
+    // 2. Media with viewOnce=true that have been viewed (viewed=true)
     const expiredMedia = await prisma.media.findMany({
       where: {
-        expiresAt: {
-          lt: new Date(),
-        },
+        OR: [
+          // 24-hour expiry media that have expired
+          {
+            viewOnce: false,
+            expiresAt: {
+              lt: new Date(),
+            },
+          },
+          // "View once" media that have been viewed
+          {
+            viewOnce: true,
+            viewed: true,
+          },
+        ],
       },
     });
 
