@@ -15,6 +15,7 @@ export const SUPPORTED_MIME_TYPES = {
   "video/mp4": ".mp4",
   "video/webm": ".webm",
   "video/ogg": ".ogv",
+  "video/quicktime": ".mov",
   // PDFs
   "application/pdf": ".pdf"
 } as const;
